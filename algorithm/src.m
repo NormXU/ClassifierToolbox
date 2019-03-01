@@ -30,7 +30,13 @@ function accuracy = src(TrainSet, TestSet, train_num, test_num, class_num, lambd
         eigenface = true;
     else
         eigenface = options.eigenface;
-    end    
+    end   
+    
+    if ~isfield(options, 'ldaFlage')
+        ldaFlage = true;
+    else
+        ldaFlage = options.ldaFlage;
+    end   
     
     if ~isfield(options, 'eigenface_dim')
         eigenface_dim = train_num;
@@ -47,6 +53,22 @@ function accuracy = src(TrainSet, TestSet, train_num, test_num, class_num, lambd
         TrainSet.X  =  disc_set' * TrainSet.X;
         TestSet.X   =  disc_set' * TestSet.X;
     end
+    
+    if ldaFlage    
+        [disc_set, ~, ~] = Eigenface_f(TrainSet.X, eigenface_dim);
+        
+        % project on subspace
+        TrainSet.X  =  disc_set' * TrainSet.X;
+        TestSet.X   =  disc_set' * TestSet.X;
+        [LDA]=TrainingLDA(TrainSet.X,38,eigenface_dim,40);
+        nDimension = 38 - 1;
+        
+        V = LDA(:,1:nDimension);
+        TrainSet.X  =  V' * TrainSet.X;
+        TestSet.X = V'*TestSet.X;
+        
+    end
+
 
     % normalize data to l2-norm
     [TrainSet.X, ~] = data_normalization(TrainSet.X, TrainSet.y, 'std');   
